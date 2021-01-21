@@ -127,8 +127,8 @@ public class ControladorVistaModelo {
 		return true;
 	}
 
-	public HashSet<Cancion> buscarCancion(String interprete, String titulo, String estilo) {
-		HashSet<Cancion> busq = CatalogoCanciones.getUnicaInstancia().buscarCancion(interprete, titulo, estilo);
+	public List<Cancion> buscarCancion(String interprete, String titulo, String estilo) {
+		List<Cancion> busq = CatalogoCanciones.getUnicaInstancia().buscarCancion(interprete, titulo, estilo);
 		listaActual = new ListaCanciones("listaActual", usuarioActual);
 		listaActual.addAllCanciones(busq.toArray());
 		return busq;
@@ -355,6 +355,7 @@ public class ControladorVistaModelo {
 				for (String nombreLista : listas) {
 					documento.add(new Paragraph("Lista: " + nombreLista));
 					ListaCanciones lista = obtenerListaCanciones(nombreLista);
+					
 					lista.getCanciones().stream().forEach(c -> {
 						try {
 							documento.add(new Paragraph("   Titulo: " + c.getTitulo() + ", Interprete: "

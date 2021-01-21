@@ -77,8 +77,8 @@ public class CatalogoCanciones {
 
 	}
 
-	public HashSet<Cancion> buscarCancion(String interprete, String titulo, String estilo) {
-		HashSet<Cancion> devuelve = new HashSet<Cancion>();
+	public List<Cancion> buscarCancion(String interprete, String titulo, String estilo) {
+		List<Cancion> devuelve = new LinkedList<Cancion>();
 		if (interprete != null && interpreteCancion.get(interprete) != null)
 			devuelve.addAll(interpreteCancion.get(interprete));
 		if (titulo != null && tituloCancion.get(titulo) != null)
@@ -86,6 +86,10 @@ public class CatalogoCanciones {
 		if (estilo != null && estiloCancion.get(estilo) != null)
 			devuelve.addAll(estiloCancion.get(estilo));
 
+		if(interprete==null && titulo==null && estilo==null) {
+			devuelve.addAll(idCancion.values());
+		}
+			
 		return devuelve;
 	}
 

@@ -16,6 +16,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.EventObject;
 import java.util.HashSet;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.Box;
@@ -56,7 +57,7 @@ public class VentanaExplorar {
 	private String titulo;
 	private JComboBox<String> comboEstilo;
 
-	private HashSet<Cancion> canciones;
+	private List<Cancion> canciones;
 
 	private Luz luz;
 	private CargadorCanciones cargador;

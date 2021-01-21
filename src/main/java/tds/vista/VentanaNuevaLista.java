@@ -13,7 +13,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.EventObject;
-import java.util.HashSet;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.Box;
@@ -62,7 +62,7 @@ public class VentanaNuevaLista {
 	private JTable tableIzq = new JTable();
 	private JTable tableDer = new JTable();
 
-	private HashSet<Cancion> canciones;
+	private List<Cancion> canciones;
 
 	private String interprete;
 	private String estilo;
