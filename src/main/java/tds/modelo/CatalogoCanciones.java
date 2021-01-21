@@ -18,6 +18,7 @@ public class CatalogoCanciones {
 	private HashMap<String, Vector<Cancion>> estiloCancion;
 	private HashMap<Integer, Cancion> idCancion;
 	private HashMap<String, Vector<ListaCanciones>> listasPorUsuario;
+	private LinkedList<Cancion> masEscuchadas;
 
 	private FactoriaDAO factoria;
 
@@ -34,6 +35,7 @@ public class CatalogoCanciones {
 		estiloCancion = new HashMap<String, Vector<Cancion>>();
 		idCancion = new HashMap<Integer, Cancion>();
 		listasPorUsuario = new HashMap<String, Vector<ListaCanciones>>();
+		masEscuchadas = new LinkedList<Cancion>();
 
 		try {
 			factoria = FactoriaDAO.getInstancia();
@@ -193,9 +195,7 @@ public class CatalogoCanciones {
 		if (v != null) {
 			for (ListaCanciones l : v) {
 				if (lista.equals(l.getNombre())) {
-					v.remove(l);
 					l.addCancion(c);
-					v.add(l);
 				}
 			}
 		}

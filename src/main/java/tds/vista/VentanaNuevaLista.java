@@ -394,9 +394,9 @@ public class VentanaNuevaLista {
 						panelNuevaLista.setVisible(true);
 					}
 				} else {
-					JOptionPane.showMessageDialog(frmNewList, "Ya existe una lista con ese nombre", "Lista Existente",
-							JOptionPane.WARNING_MESSAGE);
-					nombreLista.setText("Nombre de la lista");
+					btnEliminar.setVisible(true);
+					panelNuevaLista.setVisible(true);
+					ControladorVistaModelo.getUnicaInstancia().obtenerListaCanciones(nombreLista.getText());
 				}
 
 			} else {
@@ -682,7 +682,7 @@ public class VentanaNuevaLista {
 
 	private void crearManejadorBotonAceptar(JButton aceptar) {
 		aceptar.addActionListener(ev -> {
-			// Acepta las canciones de la lista TODO
+			// Acepta las canciones de la lista
 			DefaultTableModel modelo = (DefaultTableModel) tableDer.getModel();
 			for (int i = 0; i < modelo.getRowCount(); i++) {
 				Cancion a = ControladorVistaModelo.getUnicaInstancia()

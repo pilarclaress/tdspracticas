@@ -228,7 +228,7 @@ public class ControladorVistaModelo {
 
 	public void anadirCancionLista(Cancion c, String lista) {
 		CatalogoCanciones.getUnicaInstancia().anadirCancionLista(c, lista, usuarioActual);
-		TDSListaDAO cancionDAO = (TDSListaDAO) factoria.getListaDAO();
+		TDSListaDAO cancionDAO = (TDSListaDAO) factoria.getListaDAO();		
 		cancionDAO.updateLista(CatalogoCanciones.getUnicaInstancia().obtenerListaCanciones(lista, usuarioActual));
 	}
 
