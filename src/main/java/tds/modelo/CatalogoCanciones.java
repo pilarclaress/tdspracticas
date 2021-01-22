@@ -18,6 +18,8 @@ public class CatalogoCanciones {
 	private HashMap<Integer, Cancion> idCancion;
 	private LinkedList<ListaCanciones> listasUsuario;
 	private LinkedList<Cancion> masEscuchadas;
+	
+	private Cancion song;
 
 	private FactoriaDAO factoria;
 
