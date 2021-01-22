@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import beans.Entidad;
 import beans.Propiedad;
@@ -90,9 +91,9 @@ public class TDSListaDAO implements ListaDAO {
 			System.out.println("No es null");
 			for (Propiedad p : eLista.getPropiedades()) {
 				if (p.getNombre().equals(CANCIONES)) {
-					
+
 					System.out.println(lista.getInformacionCanciones());
-					
+
 					p.setValor(lista.getInformacionCanciones());
 				}
 				servPersistencia.modificarPropiedad(p);
@@ -114,6 +115,10 @@ public class TDSListaDAO implements ListaDAO {
 		}
 
 		return listas;
+	}
+
+	public List<ListaCanciones> getListasUsuario(int id) {
+		return getAll().stream().filter(l -> Integer.parseInt(l.getIdUsuario()) == id).collect(Collectors.toList());
 	}
 
 }

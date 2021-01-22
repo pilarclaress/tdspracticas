@@ -14,4 +14,6 @@ public interface ListaDAO {
 	ListaCanciones get(int id);
 
 	List<ListaCanciones> getAll();
+
+	List<ListaCanciones> getListasUsuario(int id);
 }
