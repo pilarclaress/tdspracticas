@@ -15,7 +15,9 @@ public class Usuario {
 	private String usuario;
 	private String contrasena;
 	private LinkedList<Cancion> recientes;
-	private ContextoDescuento ctx;
+	private Descuento descuento;
+	
+	private static final double PRECIOPREMIUM = 20;
 
 	public Usuario(String nombre, String apellidos, String fechaNacimiento, String email, String usuario,
 			String contrasena) {
@@ -64,12 +66,9 @@ public class Usuario {
 
 	public boolean hacerPremium() {
 		if (!premium) {
-			ctx = new ContextoDescuento();
-			Descuento descuento = new DescuentoFijo();
-			ctx.setDescuento(descuento);
 
-			double precio = ctx.calcularPrecio();
-			System.out.println("Se ha aplicado un descuento del " + ctx.getPorcentajeDescuento() + "%");
+			double precio = descuento.calcDescuento(PRECIOPREMIUM);
+			System.out.println("Se ha aplicado un descuento del " + descuento.getPorcentaje() + "%");
 			System.out.println("Total a pagar: " + precio + "€");
 
 			// REALIZA PAGO

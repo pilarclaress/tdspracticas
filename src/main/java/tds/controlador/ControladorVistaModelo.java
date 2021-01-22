@@ -132,7 +132,7 @@ public class ControladorVistaModelo {
 		listaActual.addAllCanciones(busq.toArray());
 		return busq;
 	}
-	
+
 	public List<Cancion> buscarAvanzada(String interprete, String titulo, String estilo) {
 		List<Cancion> busq = CatalogoCanciones.getUnicaInstancia().busquedaIntensiva(interprete, titulo, estilo);
 		listaActual = new ListaCanciones("listaActual", usuarioActual);
@@ -234,7 +234,7 @@ public class ControladorVistaModelo {
 
 	public void actualizarLista(List<Cancion> canciones) {
 		CatalogoCanciones.getUnicaInstancia().anadirCancionesLista(canciones, listaActual, usuarioActual);
-		TDSListaDAO cancionDAO = (TDSListaDAO) factoria.getListaDAO();		
+		TDSListaDAO cancionDAO = (TDSListaDAO) factoria.getListaDAO();
 		cancionDAO.updateLista(listaActual);
 	}
 
@@ -348,9 +348,7 @@ public class ControladorVistaModelo {
 
 	public void generarPDF(String folder) throws FileNotFoundException, DocumentException {
 		if (usuarioActual.isPremium()) {
-			// Sustituir el directorio en caso de usar Windows
-			FileOutputStream archivo = new FileOutputStream(
-					folder + usuarioActual.getUsuario() + ".pdf");
+			FileOutputStream archivo = new FileOutputStream(folder + "/" + usuarioActual.getUsuario() + ".pdf");
 			Document documento = new Document();
 			PdfWriter.getInstance(documento, archivo);
 			documento.open();
@@ -361,16 +359,17 @@ public class ControladorVistaModelo {
 				for (String nombreLista : listas) {
 					documento.add(new Paragraph("Lista: " + nombreLista));
 					ListaCanciones lista = obtenerListaCanciones(nombreLista);
-					
-					lista.getCanciones().stream().forEach(c -> {
-						try {
-							documento.add(new Paragraph("   Titulo: " + c.getTitulo() + ", Interprete: "
-									+ c.interpretesToString() + ", Estilo: " + c.getEstilo()));
-						} catch (DocumentException e) {
-							e.printStackTrace();
-						}
-					});
+					if (lista != null && lista.getCanciones()!=null) {
+						lista.getCanciones().stream().forEach(c -> {
+							try {
+								documento.add(new Paragraph("   Titulo: " + c.getTitulo() + ", Interprete: "
+										+ c.interpretesToString() + ", Estilo: " + c.getEstilo()));
+							} catch (DocumentException e) {
+								e.printStackTrace();
+							}
+						});
 
+					}
 				}
 			}
 			documento.close();
