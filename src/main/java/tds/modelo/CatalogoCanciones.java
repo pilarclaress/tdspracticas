@@ -16,7 +16,7 @@ public class CatalogoCanciones {
 	private HashMap<String, Vector<Cancion>> tituloCancion;
 	private HashMap<String, Vector<Cancion>> estiloCancion;
 	private HashMap<Integer, Cancion> idCancion;
-	private HashMap<String, Vector<ListaCanciones>> listasPorUsuario;
+	private LinkedList<ListaCanciones> listasUsuario;
 	private LinkedList<Cancion> masEscuchadas;
 
 	private FactoriaDAO factoria;
@@ -33,7 +33,7 @@ public class CatalogoCanciones {
 		tituloCancion = new HashMap<String, Vector<Cancion>>();
 		estiloCancion = new HashMap<String, Vector<Cancion>>();
 		idCancion = new HashMap<Integer, Cancion>();
-		listasPorUsuario = new HashMap<String, Vector<ListaCanciones>>();
+		listasUsuario = new LinkedList<ListaCanciones>();
 		masEscuchadas = new LinkedList<Cancion>();
 
 		try {
@@ -63,23 +63,30 @@ public class CatalogoCanciones {
 				estiloCancion.put(cancion.getEstilo(), canciones);
 
 				// Añadir canciones más escuchadas
-				if (masEscuchadas.size() < 10)
+				if (masEscuchadas.size() < 10) {
 					masEscuchadas.add(cancion);
-			}
-
-			List<ListaCanciones> listas = factoria.getListaDAO().getAll();
-			for (ListaCanciones l : listas) {
-				Vector<ListaCanciones> v = listasPorUsuario.get(l.getUsuario().getUsuario());
-				if (v == null)
-					v = new Vector<ListaCanciones>();
-				v.add(l);
-				listasPorUsuario.put(l.getUsuario().getUsuario(), v);
+				} else if (cancion.getNumReproducciones() > masEscuchadas.getLast().getNumReproducciones()) {
+					masEscuchadas.removeLast();
+					masEscuchadas.add(cancion);
+					masEscuchadas.sort((c1, c2) -> c1.getNumReproducciones().compareTo(c2.getNumReproducciones()));
+				}
 			}
 
 		} catch (DAOException eDAO) {
 			eDAO.printStackTrace();
 		}
 
+	}
+
+	public void establecerUsuario(Usuario usuarioActual) {
+		try {
+			factoria = FactoriaDAO.getInstancia();
+
+			listasUsuario = (LinkedList<ListaCanciones>) factoria.getListaDAO().getListasUsuario(usuarioActual.getId());
+
+		} catch (DAOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public List<Cancion> buscarCancion(String interprete, String titulo, String estilo) {
@@ -168,68 +175,44 @@ public class CatalogoCanciones {
 	}
 
 	public boolean comprobarNuevaLista(String l, Usuario usuario) {
-		Vector<ListaCanciones> v = listasPorUsuario.get(usuario.getUsuario());
-		if (v != null) {
-			for (ListaCanciones lista : v) {
-				if (lista.getNombre().equals(l))
-					return false;
-			}
+		for (ListaCanciones lista : listasUsuario) {
+			if (lista.getNombre().equals(l))
+				return false;
 		}
 		return true;
 	}
 
 	public boolean crearLista(ListaCanciones l) {
-		Vector<ListaCanciones> v = listasPorUsuario.get(l.getUsuario().getUsuario());
-		if (v == null)
-			v = new Vector<ListaCanciones>();
-		v.add(l);
-		listasPorUsuario.put(l.getUsuario().getUsuario(), v);
+		listasUsuario.add(l);
 		return true;
 	}
 
 	public ListaCanciones eliminarLista(String lista, Usuario usuario) {
-		Vector<ListaCanciones> v = listasPorUsuario.get(usuario.getUsuario());
-		if (v != null) {
-			for (ListaCanciones l : v) {
+		for (ListaCanciones l : listasUsuario) {
 				if (lista.equals(l.getNombre())) {
-					v.remove(l);
-					listasPorUsuario.put(usuario.getUsuario(), v);
+					listasUsuario.remove(l);
 					return l;
 				}
 			}
-		}
 
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	public List<String> obtenerListasUsuario(Usuario u) {
-		List<String> lista = new LinkedList<String>();
-		if (listasPorUsuario.containsKey(u.getUsuario())) {
-			for (ListaCanciones l : listasPorUsuario.get(u.getUsuario())) {
-				lista.add(l.getNombre());
-			}
-		}
-		return lista;
+		return (List<String>) listasUsuario.clone();
 	}
 
 	public void anadirCancionesLista(List<Cancion> canciones, ListaCanciones lista, Usuario usuario) {
-		Vector<ListaCanciones> v = listasPorUsuario.get(usuario.getUsuario());
-		if (v != null) {
-			v.stream().filter(l -> l.equals(lista)).forEach(l -> l.setCanciones(canciones));
-		}
-
-		listasPorUsuario.put(usuario.getUsuario(), v);
+			listasUsuario.stream().filter(l -> l.equals(lista)).forEach(l -> l.setCanciones(canciones));
 	}
 
 	public ListaCanciones obtenerListaCanciones(String lista, Usuario usuario) {
-		Vector<ListaCanciones> v = listasPorUsuario.get(usuario.getUsuario());
-		if (v != null) {
-			for (ListaCanciones l : v) {
+		for (ListaCanciones l : listasUsuario) {
 				if (lista.equals(l.getNombre())) {
 					return l;
 				}
 			}
-		}
 		return null;
 	}
 
@@ -238,10 +221,18 @@ public class CatalogoCanciones {
 	}
 
 	public ListaCanciones getMasEscuchadas() {
-		ListaCanciones lista = new ListaCanciones("Más escuchadas", null);
-		idCancion.values().stream().sorted((c1, c2) -> c1.getNumReproducciones().compareTo(c2.getNumReproducciones()))
-				.limit(10).forEach(c -> lista.addCancion(c));
-
+		// No se pone un usuario concreto porque son las más reproducidas de todo el
+		// sistema
+		ListaCanciones lista = new ListaCanciones("Más Escuchadas", new Usuario(null, null, null, null, null, null));
+		lista.addAllCanciones(masEscuchadas.toArray());
 		return lista;
+	}
+
+	// Actualizar la lista de las más escuchadas
+	public void reproducirCancion(Cancion cancion) {
+		if (masEscuchadas.getLast().getNumReproducciones() < cancion.getNumReproducciones()) {
+			masEscuchadas.removeLast();
+			masEscuchadas.addLast(cancion);
+		}
 	}
 }
