@@ -20,6 +20,8 @@ import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -208,13 +210,24 @@ public class VentanaRecientes {
 				if (n == 0) {
 					// Crear PDF
 					try {
-						
-						
-						//TODO
-						
-						ControladorVistaModelo.getUnicaInstancia().generarPDF();
-						JOptionPane.showMessageDialog(frmReciente, "Fichero creado con éxito!", "PDF",
-								JOptionPane.INFORMATION_MESSAGE);
+						// Mostramos un jdialog para que seleccione la carpeta donde se creará el pdf
+						JDialog jDialog = new JDialog();
+						jDialog.setTitle("Seleccionar la carpeta para el PDF");
+						JFileChooser folderChooser = new JFileChooser();
+						folderChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+						int selection = folderChooser.showSaveDialog(jDialog);
+						if (selection == JFileChooser.APPROVE_OPTION) {
+							String folder = folderChooser.getSelectedFile().getAbsolutePath();
+							ControladorVistaModelo.getUnicaInstancia().generarPDF(folder);
+							jDialog.dispose();
+							jDialog = null;
+							JOptionPane.showMessageDialog(frmReciente, "Fichero creado con éxito!", "PDF",
+									JOptionPane.INFORMATION_MESSAGE);
+						} else
+							JOptionPane.showMessageDialog(frmReciente,
+									"No se ha podido crear el fichero en el directorio indicado", "PDF",
+									JOptionPane.ERROR_MESSAGE);
+
 					} catch (FileNotFoundException | DocumentException e) {
 						e.printStackTrace();
 					}

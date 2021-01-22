@@ -346,11 +346,11 @@ public class ControladorVistaModelo {
 
 	}
 
-	public void generarPDF() throws FileNotFoundException, DocumentException {
+	public void generarPDF(String folder) throws FileNotFoundException, DocumentException {
 		if (usuarioActual.isPremium()) {
 			// Sustituir el directorio en caso de usar Windows
 			FileOutputStream archivo = new FileOutputStream(
-					"/home" + usuarioActual.getUsuario() + ".pdf");
+					folder + usuarioActual.getUsuario() + ".pdf");
 			Document documento = new Document();
 			PdfWriter.getInstance(documento, archivo);
 			documento.open();
