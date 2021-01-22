@@ -40,6 +40,10 @@ public class ListaCanciones {
 	public List<Cancion> getCanciones() {
 		return canciones;
 	}
+	
+	public void setCanciones(List<Cancion> c) {
+		canciones = c;
+	}
 
 	public void addCancion(Cancion cancion) {
 		this.canciones.add(cancion);

@@ -208,6 +208,10 @@ public class VentanaRecientes {
 				if (n == 0) {
 					// Crear PDF
 					try {
+						
+						
+						//TODO
+						
 						ControladorVistaModelo.getUnicaInstancia().generarPDF();
 						JOptionPane.showMessageDialog(frmReciente, "Fichero creado con éxito!", "PDF",
 								JOptionPane.INFORMATION_MESSAGE);

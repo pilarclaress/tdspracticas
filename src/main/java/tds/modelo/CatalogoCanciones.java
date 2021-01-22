@@ -1,7 +1,6 @@
 package tds.modelo;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -62,6 +61,10 @@ public class CatalogoCanciones {
 					canciones = new Vector<Cancion>();
 				canciones.add(cancion);
 				estiloCancion.put(cancion.getEstilo(), canciones);
+
+				// Añadir canciones más escuchadas
+				if (masEscuchadas.size() < 10)
+					masEscuchadas.add(cancion);
 			}
 
 			List<ListaCanciones> listas = factoria.getListaDAO().getAll();
@@ -81,6 +84,7 @@ public class CatalogoCanciones {
 
 	public List<Cancion> buscarCancion(String interprete, String titulo, String estilo) {
 		List<Cancion> devuelve = new LinkedList<Cancion>();
+
 		if (interprete != null && interpreteCancion.get(interprete) != null)
 			devuelve.addAll(interpreteCancion.get(interprete));
 		if (titulo != null && tituloCancion.get(titulo) != null)
@@ -88,10 +92,28 @@ public class CatalogoCanciones {
 		if (estilo != null && estiloCancion.get(estilo) != null)
 			devuelve.addAll(estiloCancion.get(estilo));
 
-		if(interprete==null && titulo==null && estilo==null) {
+		if (interprete == null && titulo == null && estilo == null) {
 			devuelve.addAll(idCancion.values());
 		}
-			
+
+		return devuelve;
+	}
+
+	public List<Cancion> busquedaIntensiva(String interprete, String titulo, String estilo) {
+		List<Cancion> devuelve = new LinkedList<Cancion>();
+		for (Cancion c : idCancion.values()) {
+			if (titulo != null && c.getTitulo().contains(titulo)) {
+				devuelve.add(c);
+			} else if (estilo != null && c.getEstilo().contains(estilo)) {
+				devuelve.add(c);
+			} else if (interprete != null) {
+				for (String i : c.getInterpretes())
+					if (i.contains(interprete)) {
+						devuelve.add(c);
+						break;
+					}
+			}
+		}
 		return devuelve;
 	}
 
@@ -190,14 +212,10 @@ public class CatalogoCanciones {
 		return lista;
 	}
 
-	public void anadirCancionLista(Cancion c, String lista, Usuario usuario) {
+	public void anadirCancionesLista(List<Cancion> canciones, ListaCanciones lista, Usuario usuario) {
 		Vector<ListaCanciones> v = listasPorUsuario.get(usuario.getUsuario());
 		if (v != null) {
-			for (ListaCanciones l : v) {
-				if (lista.equals(l.getNombre())) {
-					l.addCancion(c);
-				}
-			}
+			v.stream().filter(l -> l.equals(lista)).forEach(l -> l.setCanciones(canciones));
 		}
 
 		listasPorUsuario.put(usuario.getUsuario(), v);

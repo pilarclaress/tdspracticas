@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.EventObject;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -394,9 +395,15 @@ public class VentanaNuevaLista {
 						panelNuevaLista.setVisible(true);
 					}
 				} else {
+					JOptionPane.showMessageDialog(frmNewList, "Ya existe una lista con ese nombre", "Lista Existente",
+							JOptionPane.WARNING_MESSAGE);
+					canciones = new LinkedList<Cancion>();
+					ControladorVistaModelo.getUnicaInstancia().obtenerListaCanciones(nombreLista.getText())
+							.getCanciones().stream().forEach(c -> canciones.add(c));
+					rellenarTabla(tableDer);
 					btnEliminar.setVisible(true);
 					panelNuevaLista.setVisible(true);
-					ControladorVistaModelo.getUnicaInstancia().obtenerListaCanciones(nombreLista.getText());
+
 				}
 
 			} else {
@@ -426,7 +433,8 @@ public class VentanaNuevaLista {
 		panelIzq = crearTablaIzquierda();
 		panelCentral.add(panelIzq);
 		panelCentral.add(crearBotonesCentro());
-		panelCentral.add(crearTablaDerecha());
+		panelDer = crearTablaDerecha();
+		panelCentral.add(panelDer);
 
 		panel.add(panelCentral, BorderLayout.CENTER);
 		panel.add(crearBotonesAceptarCancelar());
@@ -522,7 +530,6 @@ public class VentanaNuevaLista {
 	}
 
 	private JPanel crearTablaIzquierda() {
-		// TODO
 		panelIzq = new JPanel();
 		panelIzq.add(Box.createRigidArea(new Dimension(30, 30)));
 		JPanel yeipanel = crearTablaCancionesIzq();
@@ -532,7 +539,6 @@ public class VentanaNuevaLista {
 	}
 
 	private JPanel crearTablaDerecha() {
-		// TODO
 		panelDer = new JPanel();
 		panelDer.add(Box.createRigidArea(new Dimension(30, 30)));
 		JPanel yeipanel = crearTablaCancionesDer();
@@ -547,9 +553,9 @@ public class VentanaNuevaLista {
 		panel.add(Box.createRigidArea(new Dimension(50, 30)));
 
 		JButton right = new JButton(">>");
-		fixedSize(right, 50, 30);
+		fixedSize(right, 60, 30);
 		JButton left = new JButton("<<");
-		fixedSize(left, 50, 30);
+		fixedSize(left, 60, 30);
 
 		panel.add(right);
 		panel.add(left);
@@ -574,16 +580,16 @@ public class VentanaNuevaLista {
 				modelo.fireTableDataChanged();
 				tableDer.setModel(modelo);
 			}
+		});
 
-			left.addActionListener(et -> {
-				if (tableDer.getSelectedRow() != -1) {
-					panelIzq.setVisible(true);
-					DefaultTableModel modelo = (DefaultTableModel) tableDer.getModel();
-					modelo.removeRow(tableDer.getSelectedRow());
-					modelo.fireTableDataChanged();
-					tableDer.setModel(modelo);
-				}
-			});
+		left.addActionListener(et -> {
+			if (tableDer.getSelectedRow() != -1) {
+				panelIzq.setVisible(true);
+				DefaultTableModel modelo = (DefaultTableModel) tableDer.getModel();
+				modelo.removeRow(tableDer.getSelectedRow());
+				modelo.fireTableDataChanged();
+				tableDer.setModel(modelo);
+			}
 
 		});
 	}
@@ -684,12 +690,14 @@ public class VentanaNuevaLista {
 		aceptar.addActionListener(ev -> {
 			// Acepta las canciones de la lista
 			DefaultTableModel modelo = (DefaultTableModel) tableDer.getModel();
+			List<Cancion> songs = new LinkedList<Cancion>();
 			for (int i = 0; i < modelo.getRowCount(); i++) {
 				Cancion a = ControladorVistaModelo.getUnicaInstancia()
 						.obtenerCancion((String) modelo.getValueAt(i, 0), (String) modelo.getValueAt(i, 1)).get();
-				ControladorVistaModelo.getUnicaInstancia().anadirCancionLista(a, nombreLista.getText());
+				songs.add(a);
 			}
-
+			ControladorVistaModelo.getUnicaInstancia().obtenerListaCanciones(nombreLista.getText());
+			ControladorVistaModelo.getUnicaInstancia().actualizarLista(songs);
 		});
 	}
 
@@ -701,7 +709,20 @@ public class VentanaNuevaLista {
 			txtEstilo.setText("Estilo");
 			comboEstilo.setSelectedIndex(0);
 
-			// Dejar las tablas vacias TODO
+			// Dejar las tablas vacias
+			DefaultTableModel modelo = (DefaultTableModel) tableDer.getModel();
+			for (int i = 0; i < modelo.getRowCount(); i++) {
+				modelo.removeRow(i);
+			}
+			modelo.fireTableDataChanged();
+			tableDer.setModel(modelo);
+
+			modelo = (DefaultTableModel) tableIzq.getModel();
+			for (int i = 0; i < modelo.getRowCount(); i++) {
+				modelo.removeRow(i);
+			}
+			modelo.fireTableDataChanged();
+			tableIzq.setModel(modelo);
 		});
 	}
 

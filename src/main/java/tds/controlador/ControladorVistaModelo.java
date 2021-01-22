@@ -11,7 +11,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.EventObject;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -133,6 +132,13 @@ public class ControladorVistaModelo {
 		listaActual.addAllCanciones(busq.toArray());
 		return busq;
 	}
+	
+	public List<Cancion> buscarAvanzada(String interprete, String titulo, String estilo) {
+		List<Cancion> busq = CatalogoCanciones.getUnicaInstancia().busquedaIntensiva(interprete, titulo, estilo);
+		listaActual = new ListaCanciones("listaActual", usuarioActual);
+		listaActual.addAllCanciones(busq.toArray());
+		return busq;
+	}
 
 	public ListaCanciones getRecientes() {
 		ListaCanciones lista = new ListaCanciones("Recientes", usuarioActual);
@@ -226,10 +232,10 @@ public class ControladorVistaModelo {
 		return listaActual;
 	}
 
-	public void anadirCancionLista(Cancion c, String lista) {
-		CatalogoCanciones.getUnicaInstancia().anadirCancionLista(c, lista, usuarioActual);
+	public void actualizarLista(List<Cancion> canciones) {
+		CatalogoCanciones.getUnicaInstancia().anadirCancionesLista(canciones, listaActual, usuarioActual);
 		TDSListaDAO cancionDAO = (TDSListaDAO) factoria.getListaDAO();		
-		cancionDAO.updateLista(CatalogoCanciones.getUnicaInstancia().obtenerListaCanciones(lista, usuarioActual));
+		cancionDAO.updateLista(listaActual);
 	}
 
 	public ListaCanciones obtenerCancionesMasReproducidas() {
@@ -344,7 +350,7 @@ public class ControladorVistaModelo {
 		if (usuarioActual.isPremium()) {
 			// Sustituir el directorio en caso de usar Windows
 			FileOutputStream archivo = new FileOutputStream(
-					"/Users/albert/Desktop" + usuarioActual.getUsuario() + ".pdf");
+					"/home" + usuarioActual.getUsuario() + ".pdf");
 			Document documento = new Document();
 			PdfWriter.getInstance(documento, archivo);
 			documento.open();

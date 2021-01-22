@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.EventObject;
-import java.util.HashSet;
 import java.util.List;
 
 import javax.imageio.ImageIO;
