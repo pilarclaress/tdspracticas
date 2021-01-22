@@ -433,7 +433,7 @@ public class VentanaMisListas {
 		scrollPanel.setViewportView(playlists);
 		crearManejadorListas(playlists);
 
-		fixedSize(playlists, 200, 100);
+		fixedSize(playlists, 200, 1000);
 		fixedSize(scrollPanel, 200, 50);
 		fixedSize(panel, 200, 50);
 		panel.add(scrollPanel);

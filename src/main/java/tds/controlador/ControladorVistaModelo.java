@@ -278,6 +278,7 @@ public class ControladorVistaModelo {
 			CancionDAO cancionDAO = factoria.getCancionDAO();
 			usuarioActual.addReciente(cancionActual);
 			cancionDAO.update(cancionActual);
+			CatalogoCanciones.getUnicaInstancia().reproducirCancion(cancionActual);
 		}
 	}
 
