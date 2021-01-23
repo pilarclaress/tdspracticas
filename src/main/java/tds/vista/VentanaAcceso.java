@@ -16,6 +16,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import tds.controlador.ControladorVistaModelo;
+import tds.modelo.Usuario;
 
 public class VentanaAcceso {
 	private JFrame frmRegistro;
@@ -163,17 +164,16 @@ public class VentanaAcceso {
 
 			String contra = String.valueOf(textPassword.getPassword());
 
-			if (alb.comprobacionUsuarioClave(textUsuario.getText(), contra) == true) {
-
+			Usuario actual = alb.comprobacionUsuarioClave(textUsuario.getText(), contra);
+			if (actual != null) {
+				ControladorVistaModelo.getUnicaInstancia().setUsuarioActual(actual);
 				frmRegistro.dispose();
 				VentanaPrincipal hola = new VentanaPrincipal();
 				hola.mostrarVentana();
 
 			} else {
-
 				JOptionPane.showMessageDialog(frmRegistro, "Nombre de usuario o contrase\u00F1a no valido", "Error",
 						JOptionPane.ERROR_MESSAGE);
-
 			}
 
 		});

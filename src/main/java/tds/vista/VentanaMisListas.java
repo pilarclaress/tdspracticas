@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.EventObject;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -90,7 +91,9 @@ public class VentanaMisListas {
 		JPanel panelCentro = new JPanel();
 		panelCentro.setLayout(new BoxLayout(panelCentro, BoxLayout.Y_AXIS));
 		panelCentro.add(panelTabla);
-		panelCentro.add(crearBotonesReproductor(), BorderLayout.SOUTH);
+		panelCentro.add(Box.createRigidArea(new Dimension(400, 20)));
+		panelCentro.add(crearBotonesReproductor());
+		panelCentro.add(Box.createRigidArea(new Dimension(450, 20)));
 
 		frmMyList.getContentPane().add(panelIzq, BorderLayout.WEST);
 		frmMyList.getContentPane().add(panelNorte, BorderLayout.NORTH);
@@ -423,9 +426,19 @@ public class VentanaMisListas {
 		String[] nombresPlaylists = (String[]) ControladorVistaModelo.getUnicaInstancia().obtenerListasUsuario()
 				.toArray(new String[0]);
 		if (nombresPlaylists.length != 0) {
-			canciones = ControladorVistaModelo.getUnicaInstancia().obtenerListaCanciones(nombresPlaylists[0])
-					.getCanciones();
+			if (ControladorVistaModelo.getUnicaInstancia().obtenerListaCanciones(nombresPlaylists[0]) != null) {
+				canciones = ControladorVistaModelo.getUnicaInstancia().obtenerListaCanciones(nombresPlaylists[0])
+						.getCanciones();
+			} else if (ControladorVistaModelo.getUnicaInstancia().getUsuarioActual().isPremium()) {
+				canciones = ControladorVistaModelo.getUnicaInstancia().obtenerCancionesMasReproducidas().getCanciones();
+			} else {
+				canciones = new LinkedList<Cancion>();
+			}
 			crearTablaCanciones();
+		} else {
+			panelTabla = new JPanel();
+			panelTabla.add(new JLabel("No tiene ninguna lista"));
+			panelTabla.add(Box.createRigidArea(new Dimension(450, 200)));
 		}
 		JList<String> playlists = new JList<String>(nombresPlaylists);
 		playlists.setSelectedIndex(0);
@@ -454,7 +467,7 @@ public class VentanaMisListas {
 	// Crea la tabla con las canciones de la lista
 	private JPanel crearTablaCanciones() {
 		panelTabla = new JPanel();
-		panelTabla.setMaximumSize(new Dimension(450, 170));
+		panelTabla.setMaximumSize(new Dimension(450, 200));
 		JScrollPane scrollPane = new JScrollPane();
 		panelTabla.add(scrollPane);
 
@@ -464,9 +477,9 @@ public class VentanaMisListas {
 
 		modelo.fireTableDataChanged();
 		table = new JTable(modelo);
-		table.setPreferredScrollableViewportSize(new Dimension(450, 170));
+		table.setPreferredScrollableViewportSize(new Dimension(450, 200));
 		table.setVisible(false);
-		fixedSize(scrollPane, 450, 170);
+		fixedSize(scrollPane, 450, 200);
 		scrollPane.setViewportView(table);
 
 		crearManejadorTabla(table);

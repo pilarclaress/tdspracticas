@@ -373,9 +373,43 @@ public class VentanaRecientes {
 		panelGrid.add(forward);
 		forward.setBackground(Color.WHITE);
 
+		añadirManejadorPlay(play);
+		añadirManejadorBackward(backward);
+		añadirManejadorForward(forward);
+		añadirManejadorStop(stop);
+
 		panel.add(panelGrid);
 
 		return panel;
+	}
+
+	private void añadirManejadorStop(JButton stop) {
+		stop.addActionListener(ev -> {
+			ControladorVistaModelo.getUnicaInstancia().stopSong();
+		});
+	}
+
+	private void añadirManejadorBackward(JButton backward) {
+		backward.addActionListener(ev -> {
+			ControladorVistaModelo.getUnicaInstancia().stopSong();
+			ControladorVistaModelo.getUnicaInstancia().previousSong();
+			ControladorVistaModelo.getUnicaInstancia().playSong();
+		});
+	}
+
+	private void añadirManejadorForward(JButton forward) {
+		forward.addActionListener(ev -> {
+			ControladorVistaModelo.getUnicaInstancia().stopSong();
+			ControladorVistaModelo.getUnicaInstancia().nextSong();
+			ControladorVistaModelo.getUnicaInstancia().playSong();
+		});
+	}
+
+	private void añadirManejadorPlay(JButton play) {
+		play.addActionListener(ev -> {
+			ControladorVistaModelo.getUnicaInstancia().stopSong();
+			ControladorVistaModelo.getUnicaInstancia().playSong();
+		});
 	}
 
 	// Crea la tabla con las canciones de la lista
@@ -466,25 +500,6 @@ public class VentanaRecientes {
 		}
 	}
 
-	// Clase interna que implementa AbstractTableModel
-	// IGNORAR
-	/*
-	 * class MiTableModel extends AbstractTableModel { private String[] columnNames
-	 * = { "Titulo", "Interprete" };
-	 * 
-	 * //Estos nombres eran para probar la tabla para que no falle private
-	 * Object[][] data = { { "Cati", "Molina" }, { "Juan", "Diaz" }, { "Susana",
-	 * "Blanco" }, { "Juana", "P�rez" }, };
-	 * 
-	 * @Override public int getColumnCount() { return columnNames.length; }
-	 * 
-	 * @Override public int getRowCount() { return data.length; }
-	 * 
-	 * @Override public Object getValueAt(int row, int col) { // TODO Ap�ndice de
-	 * m�todo generado autom�ticamente return data[row][col]; }
-	 * 
-	 * }
-	 */
 	private void fixedSize(JComponent c, int x, int y) {
 		c.setMinimumSize(new Dimension(x, y));
 		c.setMaximumSize(new Dimension(x, y));
