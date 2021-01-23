@@ -16,8 +16,6 @@ public class Usuario {
 	private String contrasena;
 	private LinkedList<Cancion> recientes;
 	private Descuento descuento;
-	
-	private static final double PRECIOPREMIUM = 20;
 
 	public Usuario(String nombre, String apellidos, String fechaNacimiento, String email, String usuario,
 			String contrasena) {
@@ -64,12 +62,23 @@ public class Usuario {
 		this.premium = p;
 	}
 
-	public boolean hacerPremium() {
-		if (!premium) {
+	public Descuento getDescuento() {
+		return descuento;
+	}
 
-			double precio = descuento.calcDescuento(PRECIOPREMIUM);
-			System.out.println("Se ha aplicado un descuento del " + descuento.getPorcentaje() + "%");
-			System.out.println("Total a pagar: " + precio + "€");
+	public void setDescuento(Descuento d) {
+		descuento = d;
+	}
+
+	public boolean hacerPremium(Descuento d, double precio) {
+		if (!premium) {
+			this.setDescuento(d);
+			double precioFinal = precio;
+			if (d != null) {
+				precioFinal = descuento.calcDescuento(precio);
+				System.out.println("Se ha aplicado un descuento del " + descuento.getPorcentaje() + "%");
+			}
+			System.out.println("Total a pagar: " + precioFinal + "€");
 
 			// REALIZA PAGO
 			// SI EL PAGO FALLARA premium=false
@@ -135,7 +144,8 @@ public class Usuario {
 	public String getRecientesId() {
 		String ids = "";
 		for (Cancion cancion : recientes) {
-			ids += cancion.getId() + " ";
+			ids += cancion.getId();
+			ids += "|";
 		}
 		return ids;
 	}

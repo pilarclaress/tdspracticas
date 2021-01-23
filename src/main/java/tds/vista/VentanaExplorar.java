@@ -5,7 +5,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.event.MouseAdapter;
@@ -30,6 +29,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -64,6 +64,8 @@ public class VentanaExplorar {
 	private CargadorCanciones cargador;
 	private JTable table;
 
+	private JRadioButton rdbtnBsquedaAvanzada;
+
 	private JPanel panelTabla;
 
 	public VentanaExplorar() {
@@ -79,9 +81,9 @@ public class VentanaExplorar {
 	public void initialize() {
 		frmExplorar = new JFrame();
 		frmExplorar.setTitle("App Music");
-		frmExplorar.setMinimumSize(new Dimension(750, 400));
-		frmExplorar.setMaximumSize(new Dimension(750, 400));
-		frmExplorar.setPreferredSize(new Dimension(750, 400));
+		frmExplorar.setMinimumSize(new Dimension(850, 400));
+		frmExplorar.setMaximumSize(new Dimension(850, 400));
+		frmExplorar.setPreferredSize(new Dimension(850, 400));
 		frmExplorar.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmExplorar.getContentPane().setLayout(new BorderLayout());
 
@@ -98,7 +100,6 @@ public class VentanaExplorar {
 
 		panelTabla = crearTablaCanciones();
 		panel.add(panelTabla);
-		panel.add(crearBotonesReproductor());
 
 		JPanel panelIzq = new JPanel();
 		panelIzq.setLayout(new BoxLayout(panelIzq, BoxLayout.Y_AXIS));
@@ -108,7 +109,7 @@ public class VentanaExplorar {
 		frmExplorar.getContentPane().add(panelIzq, BorderLayout.WEST);
 		frmExplorar.getContentPane().add(panelNorte, BorderLayout.NORTH);
 		frmExplorar.getContentPane().add(panel);
-		frmExplorar.getContentPane().add(Box.createRigidArea(new Dimension(400, 60)), BorderLayout.SOUTH);
+		frmExplorar.getContentPane().add(crearBotonesReproductor(), BorderLayout.SOUTH);
 
 		frmExplorar.setResizable(false);
 		frmExplorar.pack();
@@ -389,6 +390,7 @@ public class VentanaExplorar {
 		panelGrid.add(forward);
 		forward.setBackground(Color.WHITE);
 
+		panel.add(Box.createRigidArea(new Dimension(400, 60)));
 		panel.add(panelGrid);
 
 		añadirManejadorPlay(play);
@@ -425,33 +427,17 @@ public class VentanaExplorar {
 		});
 	}
 
-	private JPanel crearBotonesBuscarCancelar() {
-		JPanel panel = new JPanel();
-		JButton buscar = new JButton("Buscar");
-		panel.add(buscar);
-
-		crearManejadorBotonBuscar(buscar);
-		JButton cancelar = new JButton("Cancelar");
-		panel.add(cancelar);
-		crearManejadorBotonCancelar(cancelar);
-		return panel;
-	}
-
 	private JPanel crearCamposBuscar() {
 		JPanel camposyBotones = new JPanel();
-
-		GridBagLayout gbl_camposyBotones = new GridBagLayout();
-		gbl_camposyBotones.columnWidths = new int[] { 583, 0 };
-		gbl_camposyBotones.rowHeights = new int[] { 109, 0 };
-		gbl_camposyBotones.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
-		gbl_camposyBotones.rowWeights = new double[] { 1.0, Double.MIN_VALUE };
-		camposyBotones.setLayout(gbl_camposyBotones);
+		camposyBotones.setLayout(new BoxLayout(camposyBotones, BoxLayout.Y_AXIS));
 
 		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 		GridBagConstraints gbc_panel = new GridBagConstraints();
-		gbc_panel.fill = GridBagConstraints.BOTH;
+		gbc_panel.fill = GridBagConstraints.HORIZONTAL;
 		gbc_panel.gridx = 0;
 		gbc_panel.gridy = 0;
+
 		camposyBotones.add(panel, gbc_panel);
 		txtInterprete = new JTextField();
 		panel.add(txtInterprete);
@@ -476,17 +462,34 @@ public class VentanaExplorar {
 			for (String est : estilos)
 				comboEstilo.addItem(est);
 		}
-
 		crearManejadorElegirEstilo(comboEstilo);
-		fixedSize(panel, 350, 40);
-		GridBagConstraints gbc_panel1 = new GridBagConstraints();
-		gbc_panel1.gridy = 0;
-		gbc_panel1.fill = GridBagConstraints.VERTICAL;
-		camposyBotones.add(crearBotonesBuscarCancelar(), gbc_panel1);
+		fixedSize(panel, 500, 40);
 
-		fixedSize(camposyBotones, 550, 40);
+		camposyBotones.add(crearBotonesBuscarCancelar(), BorderLayout.PAGE_END);
+
+		fixedSize(camposyBotones, 500, 80);
 
 		return camposyBotones;
+	}
+
+	private JPanel crearBotonesBuscarCancelar() {
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+		fixedSize(panel, 500, 40);
+
+		JButton buscar = new JButton("Buscar");
+		panel.add(buscar);
+
+		crearManejadorBotonBuscar(buscar);
+
+		JButton cancelar = new JButton("Cancelar");
+		panel.add(cancelar);
+		crearManejadorBotonCancelar(cancelar);
+
+		rdbtnBsquedaAvanzada = new JRadioButton("Búsqueda Avanzada");
+		rdbtnBsquedaAvanzada.setSelected(false);
+		panel.add(rdbtnBsquedaAvanzada);
+		return panel;
 	}
 
 	private void crearManejadorElegirEstilo(JComboBox<String> comboEstilo) {
@@ -500,9 +503,11 @@ public class VentanaExplorar {
 			ControladorVistaModelo controlador = ControladorVistaModelo.getUnicaInstancia();
 
 			checkFields();
-
-			canciones = controlador.buscarCancion(interprete, titulo, estilo);
-
+			if (rdbtnBsquedaAvanzada.isSelected()) {
+				canciones = controlador.buscarAvanzada(interprete, titulo, estilo);
+			} else {
+				canciones = controlador.buscarCancion(interprete, titulo, estilo);
+			}
 			rellenarTabla();
 		});
 	}
@@ -513,13 +518,21 @@ public class VentanaExplorar {
 			txtTitulo.setText("Titulo");
 			txtEstilo.setText("Estilo");
 			comboEstilo.setSelectedIndex(0);
+			rdbtnBsquedaAvanzada.setSelected(false);
+
+			DefaultTableModel modelo = (DefaultTableModel) table.getModel();
+			while (modelo.getRowCount() > 0) {
+				modelo.removeRow(0);
+			}
+			modelo.fireTableDataChanged();
+			table.setModel(modelo);
 
 		});
 	}
 
 	private JPanel crearTablaCanciones() {
 		panelTabla = new JPanel();
-		panelTabla.setMaximumSize(new Dimension(700, 150));
+		panelTabla.setMaximumSize(new Dimension(700, 180));
 		JScrollPane scrollPane = new JScrollPane();
 		panelTabla.add(scrollPane);
 
@@ -529,8 +542,8 @@ public class VentanaExplorar {
 
 		modelo.fireTableDataChanged();
 		table = new JTable(modelo);
-		table.setPreferredScrollableViewportSize(new Dimension(450, 120));
-		fixedSize(scrollPane, 500, 120);
+		table.setPreferredScrollableViewportSize(new Dimension(500, 150));
+		fixedSize(scrollPane, 500, 150);
 		scrollPane.setViewportView(table);
 		panelTabla.add(scrollPane);
 
@@ -633,24 +646,4 @@ public class VentanaExplorar {
 		c.setMaximumSize(new Dimension(x, y));
 		c.setPreferredSize(new Dimension(x, y));
 	}
-
-	// Clase interna que implementa AbstractTableModel
-	// IGNORAR
-	/*
-	 * class MiTableModel extends AbstractTableModel { private String[] columnNames
-	 * = { "Titulo", "Interprete" };
-	 * 
-	 * //Estos nombres eran para probar la tabla para que no falle private
-	 * Object[][] data = { { "Cati", "Molina" }, { "Juan", "Diaz" }, { "Susana",
-	 * "Blanco" }, { "Juana", "P�rez" }, };
-	 * 
-	 * @Override public int getColumnCount() { return columnNames.length; }
-	 * 
-	 * @Override public int getRowCount() { return data.length; }
-	 * 
-	 * @Override public Object getValueAt(int row, int col) { // TODO Ap�ndice de
-	 * m�todo generado autom�ticamente return data[row][col]; }
-	 * 
-	 * }
-	 */
 }

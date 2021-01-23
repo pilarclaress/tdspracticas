@@ -10,10 +10,12 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.util.EventObject;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
@@ -31,6 +33,9 @@ import tds.dao.UsuarioDAO;
 import tds.modelo.Cancion;
 import tds.modelo.CatalogoCanciones;
 import tds.modelo.CatalogoUsuarios;
+import tds.modelo.Descuento;
+import tds.modelo.DescuentoEmail;
+import tds.modelo.DescuentoFijo;
 import tds.modelo.ListaCanciones;
 import tds.modelo.Usuario;
 import umu.tds.componente.Canciones;
@@ -50,6 +55,9 @@ public class ControladorVistaModelo {
 	private String tempPath = null;
 	private String binPath = null;
 
+	private static final double PRECIOPREMIUM = 20;
+	private LinkedList<Descuento> listaDes;
+
 	private ControladorVistaModelo() {
 		usuarioActual = null;
 		listaActual = null;
@@ -58,21 +66,32 @@ public class ControladorVistaModelo {
 		} catch (DAOException e) {
 			e.printStackTrace();
 		}
+
 		mediaPlayer = null;
 		binPath = ControladorVistaModelo.class.getClassLoader().getResource(".").getPath();
 		// quitar "/" añadida al inicio del path en plataforma Windows
 		tempPath = binPath.replace("/bin", "/temp");
 
+		listaDes = new LinkedList<Descuento>();
 	}
 
 	public static ControladorVistaModelo getUnicaInstancia() {
-		if (unicaInstancia == null)
+		if (unicaInstancia == null) {
 			unicaInstancia = new ControladorVistaModelo();
+		}
 		return unicaInstancia;
 	}
 
 	public void setUsuarioActual(Usuario usuario) {
 		this.usuarioActual = usuario;
+		if (usuarioActual != null)
+			CatalogoCanciones.getUnicaInstancia().establecerUsuario(usuarioActual);
+
+		// Lista de descuentos
+		LocalDate finicio = LocalDate.of(2020, 10, 1);
+		LocalDate ffin = LocalDate.of(2022, 1, 1);
+		listaDes.add(new DescuentoFijo(finicio, ffin));
+		listaDes.add(new DescuentoEmail(usuarioActual.getEmail()));
 	}
 
 	public Usuario getUsuarioActual() {
@@ -91,13 +110,8 @@ public class ControladorVistaModelo {
 		return CatalogoUsuarios.getUnicaInstancia().esEmailRegistrado(email);
 	}
 
-	public boolean comprobacionUsuarioClave(String u, String clave) {
-		Usuario a = CatalogoUsuarios.getUnicaInstancia().comprobarUsuarioClave(u, clave);
-		if (a != null) {
-			usuarioActual = a;
-			return true;
-		}
-		return false;
+	public Usuario comprobacionUsuarioClave(String u, String clave) {
+		return CatalogoUsuarios.getUnicaInstancia().comprobarUsuarioClave(u, clave);
 	}
 
 	public String getNombreUsuarioActual() {
@@ -187,9 +201,21 @@ public class ControladorVistaModelo {
 	}
 
 	public boolean hacerPremium() {
-		boolean realizado = usuarioActual.hacerPremium();
+		double min = PRECIOPREMIUM;
+		Descuento enviar = null;
+		if (listaDes != null) {
+			for (Descuento d : listaDes) {
+				if (d.isAplicableDescuento()) {
+					if (d.calcDescuento(PRECIOPREMIUM) < min) {
+						min = d.calcDescuento(PRECIOPREMIUM);
+						enviar = d;
+					}
+				}
+			}
+		}
+		boolean realizado = usuarioActual.hacerPremium(enviar, PRECIOPREMIUM);
 		if (realizado) {
-			CatalogoUsuarios.getUnicaInstancia().eliminarUsuario(usuarioActual); // COn modificar el usuario vale no?
+			CatalogoUsuarios.getUnicaInstancia().eliminarUsuario(usuarioActual);
 			CatalogoUsuarios.getUnicaInstancia().generarUsuario(usuarioActual);
 
 			UsuarioDAO usuarioDAO = factoria
@@ -209,9 +235,12 @@ public class ControladorVistaModelo {
 						Canciones canciones = ((CancionesEvent) e).getCanciones();
 						for (umu.tds.componente.Cancion c : canciones.getCancion()) {
 							// Convertir de Cancion.java de componente a Cancion.java de nuestra aplicación
-							Cancion cancion = new Cancion(c.getTitulo(), c.getEstilo(), c.getURL(), c.getInterprete());
-							cancionDAO.create(cancion);
-							CatalogoCanciones.getUnicaInstancia().addCancion(cancion);
+							String[] s = c.getInterprete().split(", ");
+							Cancion cancion = new Cancion(c.getTitulo(), c.getEstilo(), c.getURL(), s);
+							if (!CatalogoCanciones.getUnicaInstancia().comprobarNuevaCancion(cancion)) {
+								cancionDAO.create(cancion);
+								CatalogoCanciones.getUnicaInstancia().addCancion(cancion);
+							}
 						}
 					}
 				}
@@ -221,7 +250,8 @@ public class ControladorVistaModelo {
 	}
 
 	public List<String> obtenerListasUsuario() {
-		List<String> listas = CatalogoCanciones.getUnicaInstancia().obtenerListasUsuario(usuarioActual);
+		List<String> listas = CatalogoCanciones.getUnicaInstancia().obtenerListasUsuario(usuarioActual).stream()
+				.map(lista -> lista.getNombre()).collect(Collectors.toList());
 		if (usuarioActual.isPremium())
 			listas.add("Más reproducidas");
 		return listas;
@@ -249,37 +279,55 @@ public class ControladorVistaModelo {
 
 	public void playSong() {
 		if (cancionActual != null) {
-			URL uri = null;
 			try {
 				com.sun.javafx.application.PlatformImpl.startup(() -> {
 				});
-
-				uri = new URL(cancionActual.getRutaFichero());
-
-				System.setProperty("java.io.tmpdir", tempPath);
-				Path mp3 = Files.createTempFile("now-playing", ".mp3");
-
-				System.out.println(mp3.getFileName());
-				try (InputStream stream = uri.openStream()) {
-					Files.copy(stream, mp3, StandardCopyOption.REPLACE_EXISTING);
+				if (cancionActual.getRutaFichero().startsWith("https")) {
+					playSongHTTPS(new URL(cancionActual.getRutaFichero()));
+				} else {
+					File f = new File(cancionActual.getRutaFichero());
+					System.out.println("Reproduciendo: " + f.getName());
+					Media hit = new Media(f.toURI().toString());
+					mediaPlayer = new MediaPlayer(hit);
+					mediaPlayer.play();
 				}
-				System.out.println("finished-copy: " + mp3.getFileName());
 
-				Media media = new Media(mp3.toFile().toURI().toString());
-				mediaPlayer = new MediaPlayer(media);
-
-				mediaPlayer.play();
 			} catch (MalformedURLException e1) {
-				e1.printStackTrace();
-			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
 			cancionActual.addReproduccion();
 			CancionDAO cancionDAO = factoria.getCancionDAO();
-			usuarioActual.addReciente(cancionActual);
 			cancionDAO.update(cancionActual);
 			CatalogoCanciones.getUnicaInstancia().reproducirCancion(cancionActual);
+
+			UsuarioDAO usuarioDAO = factoria.getUsuarioDAO();
+			usuarioActual.addReciente(cancionActual);
+			usuarioDAO.updatePerfil(usuarioActual);
 		}
+	}
+
+	private void playSongHTTPS(URL uri) {
+
+		System.setProperty("java.io.tmpdir", tempPath);
+		Path mp3 = null;
+		try {
+			mp3 = Files.createTempFile("now-playing", ".mp3");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		System.out.println("Descargando: " + mp3.getFileName());
+		try (InputStream stream = uri.openStream()) {
+			Files.copy(stream, mp3, StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println("finished-copy: " + mp3.getFileName());
+
+		Media media = new Media(mp3.toFile().toURI().toString());
+		mediaPlayer = new MediaPlayer(media);
+
+		mediaPlayer.play();
 	}
 
 	public void stopSong() {
@@ -298,11 +346,11 @@ public class ControladorVistaModelo {
 			LinkedList<Cancion> lista = (LinkedList<Cancion>) listaActual.getCanciones();
 			int i = 0;
 			for (Cancion c : lista) {
-				if (cancionActual != null && c.equals(cancionActual) && i < lista.size() - 1) {
+				if (cancionActual != null && (c.getId() == cancionActual.getId()) && i < lista.size() - 1) {
 					cancionActual = lista.get(i + 1);
 					return;
 				}
-				if (cancionActual != null && c.equals(cancionActual) && i == lista.size() - 1) {
+				if (cancionActual != null && (c.getId() == cancionActual.getId()) && i == lista.size() - 1) {
 					cancionActual = lista.getFirst();
 					return;
 				}
@@ -316,11 +364,11 @@ public class ControladorVistaModelo {
 			LinkedList<Cancion> lista = (LinkedList<Cancion>) listaActual.getCanciones();
 			int i = 0;
 			for (Cancion c : lista) {
-				if (cancionActual != null && c.equals(cancionActual) && i > 0) {
+				if (cancionActual != null && (c.getId() == cancionActual.getId()) && i > 0) {
 					cancionActual = lista.get(i - 1);
 					return;
 				}
-				if (cancionActual != null && c.equals(cancionActual) && i == 0) {
+				if (cancionActual != null && (c.getId() == cancionActual.getId()) && i == 0) {
 					cancionActual = lista.getLast();
 					return;
 				}
@@ -360,7 +408,7 @@ public class ControladorVistaModelo {
 				for (String nombreLista : listas) {
 					documento.add(new Paragraph("Lista: " + nombreLista));
 					ListaCanciones lista = obtenerListaCanciones(nombreLista);
-					if (lista != null && lista.getCanciones()!=null) {
+					if (lista != null && lista.getCanciones() != null) {
 						lista.getCanciones().stream().forEach(c -> {
 							try {
 								documento.add(new Paragraph("   Titulo: " + c.getTitulo() + ", Interprete: "

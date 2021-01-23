@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Vector;
+import java.util.stream.Collectors;
 
 import tds.dao.DAOException;
 import tds.dao.FactoriaDAO;
@@ -16,7 +17,7 @@ public class CatalogoCanciones {
 	private HashMap<String, Vector<Cancion>> tituloCancion;
 	private HashMap<String, Vector<Cancion>> estiloCancion;
 	private HashMap<Integer, Cancion> idCancion;
-	private LinkedList<ListaCanciones> listasUsuario;
+	private List<ListaCanciones> listasUsuario;
 	private LinkedList<Cancion> masEscuchadas;
 
 	private FactoriaDAO factoria;
@@ -43,18 +44,18 @@ public class CatalogoCanciones {
 			for (Cancion cancion : listaAsistentes) {
 				idCancion.put(cancion.getId(), cancion);
 				for (String interp : cancion.getInterpretes()) {
-					Vector<Cancion> canciones = interpreteCancion.get(interp);
+					Vector<Cancion> canciones = interpreteCancion.get(interp.toLowerCase());
 					if (canciones == null)
 						canciones = new Vector<Cancion>();
 					canciones.add(cancion);
-					interpreteCancion.put(interp, canciones);
+					interpreteCancion.put(interp.toLowerCase(), canciones);
 				}
 
-				Vector<Cancion> canciones = tituloCancion.get(cancion.getTitulo());
+				Vector<Cancion> canciones = tituloCancion.get(cancion.getTitulo().toLowerCase());
 				if (canciones == null)
 					canciones = new Vector<Cancion>();
 				canciones.add(cancion);
-				tituloCancion.put(cancion.getTitulo(), canciones);
+				tituloCancion.put(cancion.getTitulo().toLowerCase(), canciones);
 
 				canciones = estiloCancion.get(cancion.getEstilo());
 				if (canciones == null)
@@ -65,11 +66,13 @@ public class CatalogoCanciones {
 				// Añadir canciones más escuchadas
 				if (masEscuchadas.size() < 10) {
 					masEscuchadas.add(cancion);
+					masEscuchadas.sort((c1, c2) -> c1.getNumReproducciones().compareTo(c2.getNumReproducciones()));
 				} else if (cancion.getNumReproducciones() > masEscuchadas.getLast().getNumReproducciones()) {
 					masEscuchadas.removeLast();
 					masEscuchadas.add(cancion);
 					masEscuchadas.sort((c1, c2) -> c1.getNumReproducciones().compareTo(c2.getNumReproducciones()));
 				}
+
 			}
 
 		} catch (DAOException eDAO) {
@@ -82,7 +85,7 @@ public class CatalogoCanciones {
 		try {
 			factoria = FactoriaDAO.getInstancia();
 
-			listasUsuario = (LinkedList<ListaCanciones>) factoria.getListaDAO().getListasUsuario(usuarioActual.getId());
+			listasUsuario = factoria.getListaDAO().getListasUsuario(usuarioActual.getId());
 
 		} catch (DAOException e) {
 			e.printStackTrace();
@@ -91,45 +94,109 @@ public class CatalogoCanciones {
 
 	public List<Cancion> buscarCancion(String interprete, String titulo, String estilo) {
 		List<Cancion> devuelve = new LinkedList<Cancion>();
-
-		if (interprete != null && interpreteCancion.get(interprete) != null)
-			devuelve.addAll(interpreteCancion.get(interprete));
-		if (titulo != null && tituloCancion.get(titulo) != null)
-			devuelve.addAll(tituloCancion.get(titulo));
-		if (estilo != null && estiloCancion.get(estilo) != null)
-			devuelve.addAll(estiloCancion.get(estilo));
+		int contador = 0;
 
 		if (interprete == null && titulo == null && estilo == null) {
 			devuelve.addAll(idCancion.values());
+			return devuelve;
 		}
+		if (interprete != null && interpreteCancion.get(interprete.toLowerCase()) != null) {
+			devuelve.addAll(interpreteCancion.get(interprete.toLowerCase()));
+			contador = 1;
+		}
+		// Si no coincide en el interprete se devuelve la lista vacía
+		else if (interprete != null)
+			return devuelve;
+
+		if (titulo != null && tituloCancion.get(titulo.toLowerCase()) != null) {
+			if (contador != 0) {
+				devuelve = devuelve.stream().filter(c -> c.getTitulo().toLowerCase().equals(titulo.toLowerCase()))
+						.collect(Collectors.toList());
+			} else {
+				devuelve.addAll(tituloCancion.get(titulo.toLowerCase()));
+				contador = 1;
+			}
+		}
+		// Si no coincide en el titulo se devuelve la lista vacía
+		else if (titulo != null) {
+			return new LinkedList<Cancion>();
+		}
+
+		if (estilo != null && estiloCancion.get(estilo) != null) {
+			if (contador != 0) {
+				devuelve = devuelve.stream().filter(c -> c.getEstilo().equals(estilo)).collect(Collectors.toList());
+			} else {
+				devuelve.addAll(estiloCancion.get(estilo));
+			}
+		}
+		// Si no coincide en el estilo se devuelve la lista vacía
+		else if (estilo != null)
+			new LinkedList<Cancion>();
 
 		return devuelve;
 	}
-
+	
 	public List<Cancion> busquedaIntensiva(String interprete, String titulo, String estilo) {
 		List<Cancion> devuelve = new LinkedList<Cancion>();
+
+		if (interprete == null && titulo == null && estilo == null) {
+			devuelve.addAll(idCancion.values());
+			return devuelve;
+		}
 		for (Cancion c : idCancion.values()) {
-			if (titulo != null && c.getTitulo().contains(titulo)) {
+			boolean añadido = false;
+
+			// Si el titulo coincide lo añade a la lista y marca como añadido
+			// Si el titulo no coincide se pasa a la siguiente canción
+			if (titulo != null && c.getTitulo().toLowerCase().contains(titulo.toLowerCase())) {
 				devuelve.add(c);
-			} else if (estilo != null && c.getEstilo().contains(estilo)) {
-				devuelve.add(c);
-			} else if (interprete != null) {
-				for (String i : c.getInterpretes())
-					if (i.contains(interprete)) {
-						devuelve.add(c);
-						break;
+				añadido = true;
+			} else if (titulo != null) {
+				continue;
+			}
+
+			// Si el estilo coincide y no se ha añadido ya la canción, se añade
+			// Si no coincide el estilo y ya está añadida la canción, se borra
+			// Si no coincide el estilo y no está añadida se pasa a la siguiente canción
+			if (estilo != null && c.getEstilo().equals(estilo)) {
+				if (!añadido)
+					devuelve.add(c);
+			} else if (estilo != null && añadido) {
+				devuelve.remove(c);
+			} else if (estilo != null) {
+				continue;
+			}
+
+			// Comprueba si alguno de los interpretes coincide y no está añadido se añade
+			// Si ya está añadido se marca, y si ninguno ha coincidido
+			// Se borra de la lista
+			if (interprete != null) {
+				boolean interp = false;
+				for (String i : c.getInterpretes()) {
+					if (i.toLowerCase().contains(interprete.toLowerCase())) {
+						if (!añadido) {
+							devuelve.add(c);
+							interp = true;
+							break;
+						}
+						interp = true;
 					}
+				}
+				if (!interp) {
+					devuelve.remove(c);
+				}
 			}
 		}
 		return devuelve;
 	}
 
 	public Optional<Cancion> getCancion(String titulo, String interprete) {
-		Vector<Cancion> aux = tituloCancion.get(titulo);
+		Vector<Cancion> aux = tituloCancion.get(titulo.toLowerCase());
 		if (aux != null) {
-			return aux.stream().filter(c -> c.interpretesToString().equals(interprete)).findFirst();
+			return aux.stream().filter(c -> c.interpretesToString().toLowerCase().equals(interprete.toLowerCase()))
+					.findFirst();
 		}
-		return null;
+		return Optional.empty();
 	}
 
 	public void addCancion(Cancion cancion) {
@@ -189,30 +256,29 @@ public class CatalogoCanciones {
 
 	public ListaCanciones eliminarLista(String lista, Usuario usuario) {
 		for (ListaCanciones l : listasUsuario) {
-				if (lista.equals(l.getNombre())) {
-					listasUsuario.remove(l);
-					return l;
-				}
+			if (lista.equals(l.getNombre())) {
+				listasUsuario.remove(l);
+				return l;
 			}
+		}
 
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
-	public List<String> obtenerListasUsuario(Usuario u) {
-		return (List<String>) listasUsuario.clone();
+	public List<ListaCanciones> obtenerListasUsuario(Usuario u) {
+		return listasUsuario;
 	}
 
 	public void anadirCancionesLista(List<Cancion> canciones, ListaCanciones lista, Usuario usuario) {
-			listasUsuario.stream().filter(l -> l.equals(lista)).forEach(l -> l.setCanciones(canciones));
+		listasUsuario.stream().filter(l -> l.equals(lista)).forEach(l -> l.setCanciones(canciones));
 	}
 
 	public ListaCanciones obtenerListaCanciones(String lista, Usuario usuario) {
 		for (ListaCanciones l : listasUsuario) {
-				if (lista.equals(l.getNombre())) {
-					return l;
-				}
+			if (lista.equals(l.getNombre())) {
+				return l;
 			}
+		}
 		return null;
 	}
 
@@ -224,7 +290,9 @@ public class CatalogoCanciones {
 		// No se pone un usuario concreto porque son las más reproducidas de todo el
 		// sistema
 		ListaCanciones lista = new ListaCanciones("Más Escuchadas", new Usuario(null, null, null, null, null, null));
-		lista.addAllCanciones(masEscuchadas.toArray());
+		for (Cancion c : masEscuchadas) {
+			lista.addCancion(c);
+		}
 		return lista;
 	}
 
@@ -234,5 +302,20 @@ public class CatalogoCanciones {
 			masEscuchadas.removeLast();
 			masEscuchadas.addLast(cancion);
 		}
+	}
+
+	// Si existe una canción con el mismo título, interprétes y estilo devuelve
+	// true, en caso contrario devuelve false
+	public boolean comprobarNuevaCancion(Cancion cancion) {
+		Vector<Cancion> v = tituloCancion.get(cancion.getTitulo().toLowerCase());
+		if (v != null) {
+			for (Cancion c : v) {
+				if (c.interpretesToString().toLowerCase().equals(cancion.interpretesToString().toLowerCase())
+						&& c.getEstilo().equals(cancion.getEstilo())) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }

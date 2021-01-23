@@ -4,7 +4,7 @@ package tds.modelo;
 public class DescuentoEmail extends Descuento {
 
 	private String emailUsuario;
-	private String emailDescuento = "@gmail.";
+	private String emailDescuento = "@gmail.com";
 
 	public DescuentoEmail(String email) {
 		super();

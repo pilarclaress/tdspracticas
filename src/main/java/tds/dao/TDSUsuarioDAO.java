@@ -55,7 +55,7 @@ public final class TDSUsuarioDAO implements UsuarioDAO {
 			e.printStackTrace();
 		}
 		if (recientes != null && !recientes.equals("")) {
-			for (String id : recientes.split(" ")) {
+			for (String id : recientes.split("|")) {
 				int aid = Integer.parseInt(id);
 				Cancion c = cancionDAO.get(aid);
 				usuario.addReciente(c);
@@ -96,7 +96,8 @@ public final class TDSUsuarioDAO implements UsuarioDAO {
 	}
 
 	/**
-	 * Permite que un Usuario modifique su perfil: premium, password y email
+	 * Permite que un Usuario modifique su perfil: premium, password y email También
+	 * actualia la lista de recientes
 	 */
 	public void updatePerfil(Usuario usuario) {
 		Entidad eUsuario = servPersistencia.recuperarEntidad(usuario.getId());
@@ -105,12 +106,12 @@ public final class TDSUsuarioDAO implements UsuarioDAO {
 			for (Propiedad p : eUsuario.getPropiedades()) {
 				if (p.getNombre().equals(PASSWORD)) {
 					p.setValor(usuario.getContrasena());
-				}
-				if (p.getNombre().equals(EMAIL)) {
+				} else if (p.getNombre().equals(EMAIL)) {
 					p.setValor(usuario.getEmail());
-				}
-				if (p.getNombre().equals(PREMIUM)) {
+				} else if (p.getNombre().equals(PREMIUM)) {
 					p.setValor(usuario.isPremium().toString());
+				} else if (p.getNombre().equals(RECIENTES)) {
+					p.setValor(usuario.getRecientesId());
 				}
 				servPersistencia.modificarPropiedad(p);
 			}

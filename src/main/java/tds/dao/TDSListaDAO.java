@@ -86,14 +86,9 @@ public class TDSListaDAO implements ListaDAO {
 	 */
 	public void updateLista(ListaCanciones lista) {
 		Entidad eLista = servPersistencia.recuperarEntidad(lista.getId());
-		System.out.println(lista.getId() + "  " + lista.getNombre());
 		if (eLista != null) {
-			System.out.println("No es null");
 			for (Propiedad p : eLista.getPropiedades()) {
 				if (p.getNombre().equals(CANCIONES)) {
-
-					System.out.println(lista.getInformacionCanciones());
-
 					p.setValor(lista.getInformacionCanciones());
 				}
 				servPersistencia.modificarPropiedad(p);

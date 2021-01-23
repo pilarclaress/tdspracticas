@@ -74,7 +74,8 @@ public class Cancion {
 		String sinterpretes;
 		sinterpretes = interpretes[0];
 		for (int i = 1; i < interpretes.length; i++) {
-			sinterpretes.concat("&" + interpretes[i]);
+			sinterpretes += "&";
+			sinterpretes += interpretes[i];
 		}
 		return sinterpretes;
 	}

@@ -29,6 +29,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -57,6 +58,7 @@ public class VentanaNuevaLista {
 	private JPanel panelNuevaLista;
 	private JComboBox<String> comboEstilo;
 	private JButton btnEliminar;
+	private JRadioButton rdbtnBsquedaAvanzada;
 	private Luz luz;
 	private CargadorCanciones cargador;
 
@@ -498,10 +500,14 @@ public class VentanaNuevaLista {
 		panelBuscar.setLayout(new BoxLayout(panelBuscar, BoxLayout.X_AXIS));
 
 		JButton buscar = new JButton("Buscar");
-		fixedSize(buscar, 80, 24);
+		fixedSize(buscar, 100, 24);
 		panelBuscar.add(buscar, BorderLayout.CENTER);
 
 		panel.add(panelBuscar);
+
+		rdbtnBsquedaAvanzada = new JRadioButton("Búsqueda Avanzada");
+		rdbtnBsquedaAvanzada.setSelected(false);
+		panelBuscar.add(rdbtnBsquedaAvanzada);
 
 		crearManejadorBotonBuscar(buscar);
 
@@ -540,8 +546,11 @@ public class VentanaNuevaLista {
 
 			checkFields();
 
-			canciones = controlador.buscarCancion(interprete, titulo, estilo);
-
+			if (rdbtnBsquedaAvanzada.isSelected()) {
+				canciones = controlador.buscarAvanzada(interprete, titulo, estilo);
+			} else {
+				canciones = controlador.buscarCancion(interprete, titulo, estilo);
+			}
 			rellenarTabla(tableIzq);
 		});
 	}
@@ -725,18 +734,19 @@ public class VentanaNuevaLista {
 			txtTitulo.setText("Titulo");
 			txtEstilo.setText("Estilo");
 			comboEstilo.setSelectedIndex(0);
+			rdbtnBsquedaAvanzada.setSelected(false);
 
 			// Dejar las tablas vacias
 			DefaultTableModel modelo = (DefaultTableModel) tableDer.getModel();
-			for (int i = 0; i < modelo.getRowCount(); i++) {
-				modelo.removeRow(i);
+			while (modelo.getRowCount() > 0) {
+				modelo.removeRow(0);
 			}
 			modelo.fireTableDataChanged();
 			tableDer.setModel(modelo);
 
 			modelo = (DefaultTableModel) tableIzq.getModel();
-			for (int i = 0; i < modelo.getRowCount(); i++) {
-				modelo.removeRow(i);
+			while (modelo.getRowCount() > 0) {
+				modelo.removeRow(0);
 			}
 			modelo.fireTableDataChanged();
 			tableIzq.setModel(modelo);
